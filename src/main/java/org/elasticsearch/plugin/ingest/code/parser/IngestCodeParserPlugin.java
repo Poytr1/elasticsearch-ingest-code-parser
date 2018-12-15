@@ -27,6 +27,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author poytr1
+ */
 public class IngestCodeParserPlugin extends Plugin implements IngestPlugin {
 
     public static final Setting<String> YOUR_SETTING =

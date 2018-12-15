@@ -39,6 +39,8 @@ esplugin {
 dependencies {
   compile 'org.elasticsearch:elasticsearch:6.5.3'
   compile 'com.github.javaparser:javaparser-core:3.8.2'
+  compile 'com.fasterxml.jackson.core:jackson-databind:2.5.3'
+  compile 'com.fasterxml.jackson.core:jackson-annotations:2.5.3'
   testCompile 'org.elasticsearch.test:framework:6.5.3'
 }
 

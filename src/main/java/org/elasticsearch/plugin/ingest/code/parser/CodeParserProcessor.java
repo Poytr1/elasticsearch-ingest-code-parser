@@ -17,9 +17,17 @@
 
 package org.elasticsearch.plugin.ingest.code.parser;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.github.javaparser.Position;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
 
 import org.elasticsearch.ingest.AbstractProcessor;
 import org.elasticsearch.ingest.IngestDocument;
@@ -32,6 +40,9 @@ import java.util.List;
 import static org.elasticsearch.ingest.ConfigurationUtils.readStringProperty;
 import static org.elasticsearch.ingest.ConfigurationUtils.readList;
 
+/**
+ * @author poytr1
+ */
 public class CodeParserProcessor extends AbstractProcessor {
 
     public static final String TYPE = "code_parser";
@@ -39,11 +50,13 @@ public class CodeParserProcessor extends AbstractProcessor {
     private final String field;
     private final List<String> targetFields;
 
+    private final Logger logger = LogManager.getLogger(CodeParserProcessor.class);
+
     public CodeParserProcessor(String tag, String field, List<String> targetFields) throws IOException {
         super(tag);
         // "source_field"
         this.field = field;
-        // ["class"]
+        // ["elements"]
         this.targetFields = targetFields;
     }
 
@@ -51,9 +64,23 @@ public class CodeParserProcessor extends AbstractProcessor {
     public IngestDocument execute(IngestDocument ingestDocument) throws Exception {
         String content = ingestDocument.getFieldValue(field, String.class);
         CompilationUnit cu = JavaParser.parse(content);
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.disable(MapperFeature.CAN_OVERRIDE_ACCESS_MODIFIERS);
         cu.findAll(ClassOrInterfaceDeclaration.class).stream()
                 .filter(c -> c.getName()!=null)
-                .forEach(c -> ingestDocument.setFieldValue(targetFields.get(0), c.getNameAsString()));
+                .forEach(c -> {
+                    Element e = new Element();
+                    e.setName(c.getNameAsString());
+                    e.setStart(c.getBegin().orElse(new Position(0, 0)));
+                    e.setEnd(c.getEnd().orElse(new Position(0, 0)));
+                    e.setType("class");
+                    try {
+                        logger.info(objectMapper.writeValueAsString(e));
+                        ingestDocument.setFieldValue(targetFields.get(0), objectMapper.writeValueAsString(e));
+                    } catch (JsonProcessingException err) {
+                        logger.error("parse element failed:", err);
+                    }
+                });
         return ingestDocument;
     }
 

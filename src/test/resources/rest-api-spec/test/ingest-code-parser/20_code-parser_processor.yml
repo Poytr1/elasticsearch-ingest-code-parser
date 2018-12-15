@@ -10,7 +10,7 @@
               {
                 "code_parser" : {
                   "field" : "field1",
-                  "target_fields" : ["class"]
+                  "target_fields" : ["elements"]
                 }
               }
             ]
@@ -31,5 +31,5 @@
         type: test
         id: 1
   - match: { _source.field1: "class A { }"}
-  - match: { _source.class: "A" }
+  - match: { _source.elements: "A" }
 

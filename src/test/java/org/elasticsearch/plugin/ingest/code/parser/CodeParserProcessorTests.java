@@ -35,11 +35,12 @@ public class CodeParserProcessorTests extends ESTestCase {
         document.put("source_field", "class A { }");
         IngestDocument ingestDocument = RandomDocumentPicks.randomIngestDocument(random(), document);
 
-        CodeParserProcessor processor = new CodeParserProcessor(randomAlphaOfLength(10), "source_field", Arrays.asList("class"));
+        CodeParserProcessor processor = new CodeParserProcessor(randomAlphaOfLength(10), "source_field", Arrays.asList("elements"));
         Map<String, Object> data = processor.execute(ingestDocument).getSourceAndMetadata();
 
-        assertThat(data, hasKey("class"));
-        assertThat(data.get("class"), is("A"));
+        assertThat(data, hasKey("elements"));
+        assertThat(data.get("elements"), is(
+                "{\"name\":\"A\",\"type\":\"class\",\"start\":{\"line\":1,\"column\":1},\"end\":{\"line\":1,\"column\":11}}"));
         // TODO add fancy assertions here
     }
 }

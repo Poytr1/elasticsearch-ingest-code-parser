@@ -1,6 +1,7 @@
 # Elasticsearch code-parser Ingest Processor
 
-Explain the use case of this processor in a TLDR fashion.
+
+This processor can parse Java source code and stores its main fields.
 
 ## Usage
 
@@ -8,11 +9,12 @@ Explain the use case of this processor in a TLDR fashion.
 ```
 PUT _ingest/pipeline/code-parser-pipeline
 {
-  "description": "A pipeline to do whatever",
+  "description": "a pipeline to parse source code",
   "processors": [
     {
       "code_parser" : {
-        "field" : "my_field"
+        "field" : "field1",
+        "target_fields" : ["class"]
       }
     }
   ]
@@ -20,13 +22,13 @@ PUT _ingest/pipeline/code-parser-pipeline
 
 PUT /my-index/my-type/1?pipeline=code-parser-pipeline
 {
-  "my_field" : "Some content"
+  "my_field" : "class A { }"
 }
 
 GET /my-index/my-type/1
 {
-  "my_field" : "Some content"
-  "potentially_enriched_field": "potentially_enriched_value"
+  "my_field" : "class A { }"
+  "class": "A"
 }
 ```
 
