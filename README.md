@@ -1,4 +1,4 @@
-# Elasticsearch code-parser Ingest Processor
+# Elasticsearch code-parser Ingest Processor [![Build Status](https://travis-ci.com/Poytr1/elasticsearch-ingest-code-parser.svg?branch=master)](https://travis-ci.com/Poytr1/elasticsearch-ingest-code-parser)
 
 
 This processor can parse Java source code and stores its main fields.
