@@ -10,7 +10,7 @@
               {
                 "code_parser" : {
                   "field" : "field1",
-                  "target_fields" : ["class"]
+                  "target_fields" : ["elements"]
                 }
               }
             ]
@@ -24,4 +24,9 @@
 
   - length: { docs.0.doc._source: 2 }
   - match: { docs.0.doc._source.field1: "class A { }" }
-  - match: { docs.0.doc._source.class: "A" }
+  - match: { docs.0.doc._source.elements.name: "A" }
+  - match: { docs.0.doc._source.elements.start.line: 1 }
+  - match: { docs.0.doc._source.elements.start.column: 1 }
+  - match: { docs.0.doc._source.elements.end.line: 1 }
+  - match: { docs.0.doc._source.elements.end.column: 11 }
+  - match: { docs.0.doc._source.elements.type: "class" }

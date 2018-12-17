@@ -31,5 +31,9 @@
         type: test
         id: 1
   - match: { _source.field1: "class A { }"}
-  - match: { _source.elements: "A" }
-
+  - match: { _source.elements.name: "A" }
+  - match: { _source.elements.start.line: 1 }
+  - match: { _source.elements.start.column: 1 }
+  - match: { _source.elements.end.line: 1 }
+  - match: { _source.elements.end.column: 11 }
+  - match: { _source.elements.type: "class" }

@@ -28,6 +28,8 @@ import java.util.Map;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 
+import org.json.JSONObject;
+
 public class CodeParserProcessorTests extends ESTestCase {
 
     public void testThatProcessorWorks() throws Exception {
@@ -39,8 +41,18 @@ public class CodeParserProcessorTests extends ESTestCase {
         Map<String, Object> data = processor.execute(ingestDocument).getSourceAndMetadata();
 
         assertThat(data, hasKey("elements"));
-        assertThat(data.get("elements"), is(
-                "{\"name\":\"A\",\"type\":\"class\",\"start\":{\"line\":1,\"column\":1},\"end\":{\"line\":1,\"column\":11}}"));
+        JSONObject jsonObject = new JSONObject();
+        JSONObject startPos = new JSONObject();
+        JSONObject endPos = new JSONObject();
+        startPos.put("line", 1);
+        startPos.put("column", 1);
+        endPos.put("line", 1);
+        endPos.put("column", 11);
+        jsonObject.put("name", "A");
+        jsonObject.put("start", startPos);
+        jsonObject.put("end", endPos);
+        jsonObject.put("type", "class");
+        assertThat(data.get("elements"), is(jsonObject.toMap()));
         // TODO add fancy assertions here
     }
 }
