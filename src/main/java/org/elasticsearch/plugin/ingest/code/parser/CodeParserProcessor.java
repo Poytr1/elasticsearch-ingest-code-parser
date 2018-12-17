@@ -67,19 +67,25 @@ public class CodeParserProcessor extends AbstractProcessor {
         cu.findAll(ClassOrInterfaceDeclaration.class).stream()
                 .filter(c -> c.getName()!=null)
                 .forEach(c -> {
-                    JSONObject element = new JSONObject();
-                    JSONObject startPos = new JSONObject();
-                    JSONObject endPos = new JSONObject();
-                    element.put("name", c.getNameAsString());
-                    startPos.put("line", c.getBegin().orElse(new Position(0, 0)).line);
-                    startPos.put("column", c.getBegin().orElse(new Position(0, 0)).column);
-                    endPos.put("line", c.getEnd().orElse(new Position(0, 0)).line);
-                    endPos.put("column", c.getEnd().orElse(new Position(0, 0)).column);
-                    element.put("start", startPos);
-                    element.put("end", endPos);
-                    element.put("type", "class");
-                    logger.info(element.toString());
-                    elements.add(element.toMap());
+                    addElement(
+                            c.getNameAsString(),
+                            c.getBegin().orElse(new Position(0, 0)),
+                            c.getEnd().orElse(new Position(0, 0)),
+                            "class",
+                            elements);
+                    c.getFields().forEach(f -> addElement(
+                            f.getVariable(0).getNameAsString(),
+                            f.getBegin().orElse(new Position(0, 0)),
+                            f.getEnd().orElse(new Position(0, 0)),
+                            "field",
+                            elements));
+                    c.getMethods().forEach(m -> addElement(
+                            m.getNameAsString(),
+                            m.getBegin().orElse(new Position(0, 0)),
+                            m.getEnd().orElse(new Position(0, 0)),
+                            "method",
+                            elements
+                    ));
                     ingestDocument.setFieldValue(targetFields.get(0), elements);
                 });
         return ingestDocument;
@@ -102,5 +108,20 @@ public class CodeParserProcessor extends AbstractProcessor {
             }
             return new CodeParserProcessor(tag, field, targetFields);
         }
+    }
+
+    private void addElement(String name, Position start, Position end, String type, List<Map<String, Object>> elements) {
+        JSONObject element = new JSONObject();
+        JSONObject startPos = new JSONObject();
+        JSONObject endPos = new JSONObject();
+        element.put("name", name);
+        startPos.put("line",start.line);
+        startPos.put("column", start.column);
+        endPos.put("line", end.line);
+        endPos.put("column", end.column);
+        element.put("start", startPos);
+        element.put("end", endPos);
+        element.put("type", type);
+        elements.add(element.toMap());
     }
 }

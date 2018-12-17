@@ -19,4 +19,5 @@
 grant {
   // this could be set to allow system properties to be set
   // permission java.util.PropertyPermission "*", "read,write";
+  permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
 };

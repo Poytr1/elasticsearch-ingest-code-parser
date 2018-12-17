@@ -14,7 +14,7 @@ PUT _ingest/pipeline/code-parser-pipeline
     {
       "code_parser" : {
         "field" : "field1",
-        "target_fields" : ["class"]
+        "target_fields" : ["elements"]
       }
     }
   ]
@@ -28,7 +28,20 @@ PUT /my-index/my-type/1?pipeline=code-parser-pipeline
 GET /my-index/my-type/1
 {
   "my_field" : "class A { }"
-  "class": "A"
+  "elements": [
+                {
+                    name: "A",
+                    start: {
+                        line: 1,
+                        column: 1
+                    },
+                    end: {
+                        line: 1,
+                        column: 11
+                    },
+                    type: "class"
+                }
+              ]
 }
 ```
 
