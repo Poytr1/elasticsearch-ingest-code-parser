@@ -30,6 +30,7 @@ import org.elasticsearch.ingest.IngestDocument;
 import org.elasticsearch.ingest.Processor;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.List;
 
@@ -62,6 +63,7 @@ public class CodeParserProcessor extends AbstractProcessor {
     public IngestDocument execute(IngestDocument ingestDocument) throws Exception {
         String content = ingestDocument.getFieldValue(field, String.class);
         CompilationUnit cu = JavaParser.parse(content);
+        ArrayList<Map<String, Object>> elements = new ArrayList<>();
         cu.findAll(ClassOrInterfaceDeclaration.class).stream()
                 .filter(c -> c.getName()!=null)
                 .forEach(c -> {
@@ -77,7 +79,8 @@ public class CodeParserProcessor extends AbstractProcessor {
                     element.put("end", endPos);
                     element.put("type", "class");
                     logger.info(element.toString());
-                    ingestDocument.setFieldValue(targetFields.get(0), element.toMap());
+                    elements.add(element.toMap());
+                    ingestDocument.setFieldValue(targetFields.get(0), elements);
                 });
         return ingestDocument;
     }

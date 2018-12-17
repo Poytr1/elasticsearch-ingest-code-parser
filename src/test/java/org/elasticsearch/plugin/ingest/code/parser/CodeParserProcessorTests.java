@@ -52,7 +52,7 @@ public class CodeParserProcessorTests extends ESTestCase {
         jsonObject.put("start", startPos);
         jsonObject.put("end", endPos);
         jsonObject.put("type", "class");
-        assertThat(data.get("elements"), is(jsonObject.toMap()));
+        assertThat(data.get("elements"), is(Arrays.asList(jsonObject.toMap())));
         // TODO add fancy assertions here
     }
 }
