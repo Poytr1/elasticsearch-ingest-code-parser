@@ -20,24 +20,18 @@ package org.elasticsearch.plugin.ingest.code.parser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.github.javaparser.Position;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-
 import org.elasticsearch.ingest.AbstractProcessor;
 import org.elasticsearch.ingest.IngestDocument;
 import org.elasticsearch.ingest.Processor;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.List;
 
+import org.antlr.v4.runtime.*;
+
 import static org.elasticsearch.ingest.ConfigurationUtils.readStringProperty;
 import static org.elasticsearch.ingest.ConfigurationUtils.readList;
-
-import org.json.JSONObject;
 
 /**
  * @author poytr1
@@ -60,34 +54,15 @@ public class CodeParserProcessor extends AbstractProcessor {
     }
 
     @Override
-    public IngestDocument execute(IngestDocument ingestDocument) throws Exception {
+    public IngestDocument execute(IngestDocument ingestDocument) {
         String content = ingestDocument.getFieldValue(field, String.class);
-        CompilationUnit cu = JavaParser.parse(content);
-        ArrayList<Map<String, Object>> elements = new ArrayList<>();
-        cu.findAll(ClassOrInterfaceDeclaration.class).stream()
-                .filter(c -> c.getName()!=null)
-                .forEach(c -> {
-                    addElement(
-                            c.getNameAsString(),
-                            c.getBegin().orElse(new Position(0, 0)),
-                            c.getEnd().orElse(new Position(0, 0)),
-                            "class",
-                            elements);
-                    c.getFields().forEach(f -> addElement(
-                            f.getVariable(0).getNameAsString(),
-                            f.getBegin().orElse(new Position(0, 0)),
-                            f.getEnd().orElse(new Position(0, 0)),
-                            "field",
-                            elements));
-                    c.getMethods().forEach(m -> addElement(
-                            m.getNameAsString(),
-                            m.getBegin().orElse(new Position(0, 0)),
-                            m.getEnd().orElse(new Position(0, 0)),
-                            "method",
-                            elements
-                    ));
-                    ingestDocument.setFieldValue(targetFields.get(0), elements);
-                });
+        CodePointCharStream inputStream = CharStreams.fromString(content);
+        Lexer lexer = new Java8Lexer(inputStream);
+        TokenStream tokenStream = new CommonTokenStream(lexer);
+        Java8Parser parser = new Java8Parser(tokenStream);
+        ExtendedJava8Visitor extendedJava8Visitor = new ExtendedJava8Visitor();
+        extendedJava8Visitor.visit(parser.compilationUnit());
+        ingestDocument.setFieldValue(targetFields.get(0), extendedJava8Visitor.getElements().toString());
         return ingestDocument;
     }
 
@@ -110,18 +85,4 @@ public class CodeParserProcessor extends AbstractProcessor {
         }
     }
 
-    private void addElement(String name, Position start, Position end, String type, List<Map<String, Object>> elements) {
-        JSONObject element = new JSONObject();
-        JSONObject startPos = new JSONObject();
-        JSONObject endPos = new JSONObject();
-        element.put("name", name);
-        startPos.put("line",start.line);
-        startPos.put("column", start.column);
-        endPos.put("line", end.line);
-        endPos.put("column", end.column);
-        element.put("start", startPos);
-        element.put("end", endPos);
-        element.put("type", type);
-        elements.add(element.toMap());
-    }
 }

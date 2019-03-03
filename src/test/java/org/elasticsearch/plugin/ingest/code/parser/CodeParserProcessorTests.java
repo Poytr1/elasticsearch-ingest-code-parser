@@ -19,6 +19,7 @@ package org.elasticsearch.plugin.ingest.code.parser;
 
 import org.elasticsearch.ingest.IngestDocument;
 import org.elasticsearch.ingest.RandomDocumentPicks;
+import org.elasticsearch.plugin.ingest.code.parser.model.Element;
 import org.elasticsearch.test.ESTestCase;
 
 import java.util.ArrayList;
@@ -29,54 +30,25 @@ import java.util.Map;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 
-import org.json.JSONObject;
-
 public class CodeParserProcessorTests extends ESTestCase {
 
     public void testThatProcessorWorks() throws Exception {
         Map<String, Object> document = new HashMap<>();
-        document.put("source_field", "class A { int foo; public void bar() { } }");
+        document.put("source_field", "class A { int foo; public int bar() { return 2; } }");
         IngestDocument ingestDocument = RandomDocumentPicks.randomIngestDocument(random(), document);
 
         CodeParserProcessor processor = new CodeParserProcessor(randomAlphaOfLength(10), "source_field", Arrays.asList("elements"));
         Map<String, Object> data = processor.execute(ingestDocument).getSourceAndMetadata();
 
         assertThat(data, hasKey("elements"));
-        ArrayList<Map<String, Object>> elements = new ArrayList<>();
-        JSONObject jsonObject = new JSONObject();
-        JSONObject startPos = new JSONObject();
-        JSONObject endPos = new JSONObject();
+        ArrayList<Element> elements = new ArrayList<>();
         // add class A
-        startPos.put("line", 1);
-        startPos.put("column", 1);
-        endPos.put("line", 1);
-        endPos.put("column", 42);
-        jsonObject.put("name", "A");
-        jsonObject.put("start", startPos);
-        jsonObject.put("end", endPos);
-        jsonObject.put("type", "class");
-        elements.add(jsonObject.toMap());
+        elements.add(new Element("A", "class", 1, 6, 6));
         // add field foo
-        startPos.put("line", 1);
-        startPos.put("column", 11);
-        endPos.put("line", 1);
-        endPos.put("column", 18);
-        jsonObject.put("name", "foo");
-        jsonObject.put("start", startPos);
-        jsonObject.put("end", endPos);
-        jsonObject.put("type", "field");
-        elements.add(jsonObject.toMap());
+        elements.add(new Element("foo", "field", 1, 14, 16));
         // add method bar
-        startPos.put("line", 1);
-        startPos.put("column", 20);
-        endPos.put("line", 1);
-        endPos.put("column", 40);
-        jsonObject.put("name", "bar");
-        jsonObject.put("start", startPos);
-        jsonObject.put("end", endPos);
-        jsonObject.put("type", "method");
-        elements.add(jsonObject.toMap());
-        assertThat(data.get("elements"), is(elements));
+        elements.add(new Element("bar()", "method", 1, 30, 34));
+        assertThat(data.get("elements"), is(elements.toString()));
     }
 }
 
